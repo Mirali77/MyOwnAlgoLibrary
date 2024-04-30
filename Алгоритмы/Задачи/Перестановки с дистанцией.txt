@@ -1,0 +1,89 @@
+//https://atcoder.jp/contests/abc309/tasks/abc309_g
+#include <iostream>
+#include <string>
+#include <deque>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <set>
+#include <queue>
+#include <fstream>
+#include <stack>
+#include <cmath>
+#include <bitset>
+#include <unordered_set>
+#include <unordered_map>
+#include <random>
+#include <array>
+#include <chrono>
+#include <functional>
+#include <numeric>
+#include <complex>
+using namespace std;
+
+#define ll long long
+#define ld long double
+#define ull unsigned ll
+
+#define forn(i, n) for (ll i = 1; i <= n; i++)
+#define dforn(i, a, b) for (ll i = a; i <= b; i++) 
+#define rforn(i, n) for (ll i = n; i >= 1; i--)
+#define rdforn(i, a, b) for (ll i = b; i >= a; i--)
+#define sforn(i, a, b, s) for (ll i = a; i <= b; i += s)
+#define aforn(v, a) for (auto& v : a)
+
+const ll mod = 998244353;
+const ld pi = acos(-1);
+const ll N = 1e5;
+const ll inf = 1e17;
+const int iinf = 1e5;
+const ld dinf = 1e15;
+const double eps = 1e-6;
+
+void solve() {
+	ll n, x;
+	cin >> n >> x;
+	x--;
+	ll sz = 1LL << (2 * x + 1);
+	vector<vector<ll>> dp(n + 1, vector<ll>(sz));
+	dp[0][0] = 1;
+	forn(i, n) {
+		vector<vector<ll>> ndp(n + 1, vector<ll>(sz));
+		dforn(j, 0, n) {
+			dforn(mask, 0, sz - 1) {
+				(ndp[j][mask >> 1] += dp[j][mask]) %= mod;
+				if (j < n) {
+					dforn(k, -x, x) {
+						if (i + k < 1 || i + k > n || ((1LL << (x + k)) & (mask >> 1)) != 0) {
+							continue;
+						}
+						(ndp[j + 1][(mask >> 1) + (1LL << (x + k))] += dp[j][mask]) %= mod;
+					}
+				}
+			}
+		}
+		dp = ndp;
+	}
+	ll ans = 0;
+	vector<ll> fact(n + 1);
+	fact[0] = 1;
+	forn(i, n) {
+		fact[i] = fact[i - 1] * i % mod;
+	}
+	dforn(i, 0, n) {
+		dforn(mask, 0, sz - 1) {
+			(ans += (i & 1 ? -1 : 1) * dp[i][mask] * fact[n - i] % mod + mod) %= mod;
+		}
+	}
+	cout << ans << '\n';
+}
+
+int main()
+{
+	ios::sync_with_stdio(0); cin.tie(0); cout.tie(0);
+	int t = 1;
+	//cin >> t;
+	while (t--) solve();
+	return 0;
+}

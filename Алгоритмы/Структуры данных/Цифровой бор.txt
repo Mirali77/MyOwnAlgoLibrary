@@ -1,0 +1,33 @@
+struct trie {
+    vector<vector<ll>> go;
+    trie() {
+        go.resize(1, vector<ll>(2, -1));
+    }
+    void add(ll state, ll mask, ll cnt) {
+        if (cnt == -1) {
+            return;
+        }
+        ll bt = (mask & (1LL << cnt)) != 0;
+        if (go[state][bt] == -1) {
+            go.push_back(vector<ll>(2, -1));
+            go[state][bt] = go.size() - 1;
+        }
+        add(go[state][bt], mask, cnt - 1);
+    }
+    void add(ll mask) {
+        add(0, mask, 30);
+    }
+    ll mx_xor(ll state, ll mask, ll cnt) {
+        if (cnt == -1) {
+            return 0LL;
+        }
+        ll bt = (mask & (1LL << cnt)) != 0;
+        if (go[state][bt ^ 1] == -1) {
+            return mx_xor(go[state][bt], mask, cnt - 1);
+        }
+        return (1LL << cnt) + mx_xor(go[state][bt ^ 1], mask, cnt - 1);
+    }
+    ll mx_xor(ll mask) {
+        return mx_xor(0, mask, 30);
+    }
+};

@@ -1,0 +1,127 @@
+//Picazo https://infoarena.ro/problema/picazo
+#include <iostream>
+#include <string>
+#include <deque>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <set>
+#include <queue>
+#include <fstream>
+#include <stack>
+#include <cmath>
+#include <bitset>
+#include <unordered_set>
+#include <unordered_map>
+#include <random>
+#include <array>
+#include <chrono>
+#include <functional>
+#include <numeric>
+#include <complex>
+
+using namespace std;
+
+#define ll long long
+#define ld long double
+#define ull uint64_t
+#define pll pair<ll, ll>
+#define pii pair<int, int>
+#define pli pair<ll, int>
+#define plli pair<pll, int>
+#define pld pair<ld, ld>
+#define fst first
+#define snd second
+#define pdi pair<ld, int>
+#define pdd pair<double, double>
+
+#define forn(i, n) for (int i = 1; i <= n; i++)
+#define dforn(i, a, b) for (int i = a; i <= b; i++) 
+#define rforn(i, n) for (int i = n; i >= 1; i--)
+#define rdforn(i, a, b) for (int i = b; i >= a; i--)
+#define sforn(i, a, b, s) for (int i = a; i <= b; i += s)
+#define aforn(v, a) for (auto& v : a)
+#define sz(a) ((int)a.size())
+
+const int mod = 1e9 + 7;
+const ld pi = acos(-1);
+const ll N = 1e6;
+const ll inf = 3e18;
+const int iinf = 1 << 28;
+const ld dinf = 1e9;
+const double eps = 1e-12;
+
+template <typename T>
+struct lazy_tree {
+	vector<T> t, add;
+	int n = 1;
+	lazy_tree(int sn) {
+		while (n < sn) n <<= 1;
+		t.resize(2 * n), add.resize(2 * n);
+	}
+	void push(int v, int l, int r) {
+		if (add[v] == 0) return;
+		t[v] += add[v];
+		if (r - l > 1) add[2 * v] += add[v], add[2 * v + 1] += add[v];
+		add[v] = 0;
+	}
+	void seg_set(int x, int l, int r, int ql, int qr, T v) {
+		push(x, l, r);
+		if (r <= ql || qr <= l) return;
+		if (ql <= l && r <= qr) add[x] += v, push(x, l, r);
+		else {
+			int m = (l + r) >> 1;
+			seg_set(2 * x, l, m, ql, qr, v);
+			seg_set(2 * x + 1, m, r, ql, qr, v);
+			t[x] = max(t[2 * x], t[2 * x + 1]);
+		}
+	}
+	void seg_set(int ql, int qr, T x) { seg_set(1, 0, n, ql, qr, x); }
+	T query(int l, int r, int x, int lx, int rx) {
+		push(x, lx, rx);
+		if (l >= rx || r <= lx) return -inf;
+		if (lx >= l && rx <= r) return t[x];
+		int m = (lx + rx) >> 1;
+		return max(query(l, r, 2 * x, lx, m), query(l, r, 2 * x + 1, m, rx));
+	}
+	T query(int l, int r) { return query(l, r, 1, 0, n); }
+};
+
+ifstream fin("picazo.in");
+ofstream fout("picazo.out");
+
+void solve() {
+	int n, k, q;
+	fin >> n >> k >> q;
+	vector<pii> seg(q + 1), ev;
+	vector<vector<int>> right(n + 1);
+	forn(i, q) fin >> seg[i].fst >> seg[i].snd, ev.push_back({ seg[i].fst, -1 }), ev.push_back({ seg[i].snd, 1 }), right[seg[i].snd].push_back(i);
+	forn(i, n) ev.push_back({ i, 0 });
+	sort(ev.begin(), ev.end());
+	int cnt = 0;
+	vector<int> p(n + 1);
+	aforn(v, ev) {
+		if (v.snd == -1) cnt++;
+		else if (v.snd == 1) cnt--;
+		else p[v.fst] = cnt - k;
+	}
+	lazy_tree<ll> Tr(n + 1);
+	forn(i, n) {
+		ll cur = Tr.query(0, i);
+		Tr.seg_set(i, i + 1, cur);
+		Tr.seg_set(0, i, p[i]);
+		aforn(v, right[i]) Tr.seg_set(seg[v].fst, i + 1, 1);
+	}
+	ll ans = Tr.t[1];
+	fout << ans << '\n';
+}
+
+int main()
+{
+	ios::sync_with_stdio(0); cin.tie(0); cout.tie(0);
+	int t = 1;
+	//cin >> t;
+	while (t--) solve();
+	return 0;
+}

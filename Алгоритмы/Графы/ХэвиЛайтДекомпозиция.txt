@@ -1,0 +1,43 @@
+struct HeavyLight {
+    vector<ll> parent, heavy, depth, root, treePos;
+ 
+	ll dfs(vector<vector<ll>>& kek, ll v) {
+		ll size = 1, maxSubtree = 0;
+		aforn(u, kek[v]) {
+			if (u != parent[v]) {
+				parent[u] = v;
+				depth[u] = depth[v] + 1;
+				ll subtree = dfs(kek, u);
+				if (subtree > maxSubtree) heavy[v] = u, maxSubtree = subtree;
+				size += subtree;
+			}
+		}
+		return size;
+	}
+ 
+	void init(vector<vector<ll>>& kek, ll n, ll rt, seg_tree& Tr) {
+		parent.resize(n + 1); heavy.resize(n + 1, -1); depth.resize(n + 1);
+		root.resize(n + 1); treePos.resize(n + 1); Tr.set();
+		parent[0] = -1;
+		depth[0] = 0;
+		dfs(kek, rt);
+		ll currentPos = 1;
+		forn(i, n) {
+			if (parent[i] == -1 || heavy[parent[i]] != i) {
+				for (ll j = i; j != -1; j = heavy[j]) {
+					root[j] = i;
+					treePos[j] = currentPos++;
+				}
+			}
+		}
+	}
+ 
+	void set(ll u, ll v, seg_tree& Tr) {
+		for (; root[u] != root[v]; v = parent[root[v]]) {
+			if (depth[root[u]] > depth[root[v]]) swap(u, v);
+			Tr.seg_set(treePos[root[v]], treePos[v] + 1);
+		}
+		if (depth[u] > depth[v]) swap(u, v);
+		Tr.seg_set(treePos[u], treePos[v] + 1);
+	}
+};

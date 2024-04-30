@@ -1,0 +1,38 @@
+struct seg_tree {
+    int lb, rb;
+    ll val;
+    seg_tree* l = nullptr, * r = nullptr;
+    seg_tree(int lb, int rb, ll val = 0) : lb(lb), rb(rb), val(val) {};
+    void extend() {
+        if (!l && rb - lb != 1) {
+            int m = (lb + rb) >> 1;
+            l = new seg_tree(lb, m);
+            r = new seg_tree(m, rb);
+        }
+    }
+    void set(int i, int x) {
+        if (rb - lb == 1) {
+            val = x;
+            return;
+        }
+        extend();
+        int m = (lb + rb) >> 1;
+        if (i < m) {
+            l->set(i, x);
+        }
+        else {
+            r->set(i, x);
+        }
+        val = l->val + r->val;
+    }
+    ll query(int ql, int qr) {
+        if (ql <= lb && rb <= qr) {
+            return val;
+        }
+        if (qr <= lb || rb <= ql) {
+            return 0;
+        }
+        extend();
+        return l->query(ql, qr) + r->query(ql, qr);
+    }
+};

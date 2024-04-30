@@ -1,0 +1,59 @@
+//Алгоритм поиска компонент сильной связности в ориентированном графе: O(n)
+ll n, m, timer = 0;
+vector<vector<ll>> kek;
+vector<ll> tmr, lowlink, path, mark;
+vector<bool> path_check;
+
+void restore() {
+	kek.clear();
+	kek.resize(n + 1);
+	tmr.clear();
+	tmr.resize(n + 1, -1);
+	lowlink.clear();
+	lowlink.resize(n + 1);
+	path.clear();
+	path_check.clear();
+	path_check.resize(n + 1);
+	mark.clear();
+	mark.resize(n + 1);
+	timer = 0;
+}
+
+void strong(ll v) {
+	tmr[v] = timer;
+	lowlink[v] = timer++;
+	path.push_back(v);
+	path_check[v] = true;
+	if (!kek[v].empty()) {
+		dforn(i, 0, kek[v].size() - 1) {
+			ll to = kek[v][i];
+			if (tmr[to] == -1) {
+				strong(to);
+			}
+			lowlink[v] = min(lowlink[v], lowlink[to]);
+		}
+	}
+	if (lowlink[v] == tmr[v]) {
+		while (path_check[v]) {
+			mark[path.back()] = v;
+			path_check[path.back()] = false;
+			tmr[path.back()] = inf;
+			lowlink[path.back()] = inf;
+			path.pop_back();
+		}
+	}
+}
+
+void solve() {
+	cin >> n >> m;
+	forn(i, m) {
+		ll u, v;
+		cin >> u >> v;
+		kek[u].push_back(v);
+	}
+	forn(i, m) {
+		if (tmr[i] == -1) {
+			strong(i);
+		}
+	}
+}

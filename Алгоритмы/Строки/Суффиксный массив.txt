@@ -1,0 +1,155 @@
+vector<ll> suffix_array(string s) {
+    ll n = s.size();
+    vector<ll> a(n), c(n), h(n);
+    vector<pair<char, ll>> t;
+    dforn(i, 0, n - 1) {
+        t.push_back({ s[i], i });
+    }
+    sort(t.begin(), t.end());
+    ll cur = -1;
+    dforn(i, 0, n - 1) {
+        if (i == 0 || t[i].first != t[i - 1].first) {
+            cur++;
+            h[cur] = i;
+        }
+        a[i] = t[i].second;
+        c[a[i]] = cur;
+    }
+    vector<ll> a1(n), c1(n);
+    for (ll len = 1; len < n; len *= 2) {
+        for (ll i = 0; i < n; i++) {
+            ll j = (n + a[i] - len) % n;
+            a1[h[c[j]]++] = j;
+        }
+        a = a1;
+        cur = -1;
+        for (ll i = 0; i < n; i++) {
+            if (i == 0 || c[a[i]] != c[a[i - 1]] || c[(a[i] + len) % n] != c[(a[i - 1] + len) % n]) {
+                cur++;
+                h[cur] = i;
+            }
+            c1[a[i]] = cur;
+        }
+        c = c1;
+    }
+    return a;
+}
+vector<ll> build_lcp(string s, vector<ll> suf) {
+    ll n = s.size();
+    vector<ll> rsuf(n), lcp(n);
+    dforn(i, 0, n - 1) {
+        rsuf[suf[i]] = i;
+    }
+    ll cur = 0;
+    dforn(i, 0, n - 1) {
+        ll j = rsuf[i];
+        if (j != n - 1) {
+            while (s[suf[j] + cur] == s[suf[j + 1] + cur]) cur++;
+            lcp[j] = cur;
+        }
+        if (cur > 0) cur--;
+    }
+    return lcp;
+}
+
+
+-----------------------------------------------------------------------------------------------------------------------
+vector<int> suffix_array(string s) {
+    int n = s.size();
+    vector<int> a(n), c(n), h(n);
+    vector<pair<char, int>> t;
+    dforn(i, 0, n - 1) {
+        t.push_back({ s[i], i });
+    }
+    sort(t.begin(), t.end());
+    int cur = -1;
+    dforn(i, 0, n - 1) {
+        if (i == 0 || t[i].first != t[i - 1].first) {
+            cur++;
+            h[cur] = i;
+        }
+        a[i] = t[i].second;
+        c[a[i]] = cur;
+    }
+    vector<int> a1(n), c1(n);
+    for (int len = 1; len < n; len *= 2) {
+        for (int i = 0; i < n; i++) {
+            int j = (n + a[i] - len) % n;
+            a1[h[c[j]]++] = j;
+        }
+        a = a1;
+        cur = -1;
+        for (int i = 0; i < n; i++) {
+            if (i == 0 || c[a[i]] != c[a[i - 1]] || c[(a[i] + len) % n] != c[(a[i - 1] + len) % n]) {
+                cur++;
+                h[cur] = i;
+            }
+            c1[a[i]] = cur;
+        }
+        c = c1;
+    }
+    return a;
+}
+vector<int> build_lcp(string s, vector<int> suf) {
+    int n = s.size();
+    vector<int> rsuf(n), lcp(n);
+    dforn(i, 0, n - 1) {
+        rsuf[suf[i]] = i;
+    }
+    int cur = 0;
+    dforn(i, 0, n - 1) {
+        int j = rsuf[i];
+        if (j != n - 1) {
+            while (s[suf[j] + cur] == s[suf[j + 1] + cur]) cur++;
+            lcp[j] = cur;
+        }
+        if (cur > 0) cur--;
+    }
+    return lcp;
+}
+
+void solve() {
+    string s;
+    cin >> s;
+    ll n = s.size();
+    s.push_back('$');
+    vector<int> sa = suffix_array(s), lcp = build_lcp(s, sa);
+    ll ans = 0, cnt = 0, ncnt = 0, pcnt = 0;
+    vector<vector<int>> kek(n + 1);
+    vector<ll> l(n + 1, -1), r(n + 1, -1);
+    dforn(i, 0, n - 1) {
+        if (lcp[i]) {
+            kek[lcp[i]].push_back(i);
+        }
+    }
+    rforn(i, n) {
+        if (!kek[i].size()) {
+            continue;
+        }
+        dforn(j, 0, kek[i].size() - 1) {
+            ll ind = kek[i][j];
+            l[ind] = r[ind] = ind;
+            if (ind != 0 && l[ind - 1] != -1) {
+                ll left = l[ind - 1];
+                cnt -= (r[left] - left + 2) * (r[left] - left + 2);
+                pcnt -= (r[left] - left + 2);
+                r[left] = ind;
+                l[ind] = left;
+            }
+            if (ind != n && l[ind + 1] != -1) {
+                ll right = r[ind + 1];
+                cnt -= (right - l[right] + 2) * (right - l[right] + 2);
+                pcnt -= (right - l[right] + 2);
+                l[right] = l[ind];
+                r[l[ind]] = right;
+            }
+            cnt += (r[l[ind]] - l[ind] + 2) * (r[l[ind]] - l[ind] + 2);
+            pcnt += (r[l[ind]] - l[ind] + 2);
+        }
+        ncnt += pcnt;
+        ans += cnt;
+    }
+    ncnt = n * (n + 1) / 2 - ncnt;
+    ans += ncnt;
+    cout << ans << '\n';
+}

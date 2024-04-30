@@ -1,0 +1,29 @@
+ll bpow(ll n, ll a) { return n == 0 ? 1 : n & 1 ? a * bpow(n - 1, a) % mod : bpow(n >> 1, a * a % mod); }
+
+void NTT(vector<ll>& a, int n, bool f = true) {
+    int i, j, k, m, u, v, w, wm;
+    for (i = n >> 1, j = 1, k; j < n - 1; j++) {
+        if (i > j) swap(a[i], a[j]);
+        for (k = n >> 1; k <= i; k >>= 1) i ^= k; i ^= k;
+    }
+    for (m = 2; m <= n; m <<= 1)
+        for (i = 0, wm = bpow(f ? (mod - 1) / m : (mod - 1) / m * (m - 1), 3); i < n; i += m)
+            for (j = i, w = 1; j < i + (m >> 1); j++) {
+                u = a[j], v = a[j + (m >> 1)] * w % mod;
+                a[j] = ((ll)u + v) % mod;
+                a[j + (m >> 1)] = ((ll)u + mod - v) % mod;
+                w = (ll)w * wm % mod;
+            }
+    if (!f) for (w = bpow(mod - 2, n), i = 0; i < n; i++) (a[i] *= w) %= mod;
+}
+
+vector<ll> convolution(vector<ll> a, vector<ll> b) {
+    int n = 1;
+    while (n < max(sz(a), sz(b))) n <<= 1; n <<= 1;
+    a.resize(n); b.resize(n);
+    NTT(a, n), NTT(b, n);
+    dforn(i, 0, sz(a) - 1) (a[i] *= b[i]) %= mod;
+    NTT(a, n, false);
+    while (sz(a) > 0 && a.back() == 0) a.pop_back();
+    return a;
+}

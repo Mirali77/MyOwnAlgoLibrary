@@ -1,0 +1,16 @@
+void fwht(int l, int r, vector<int>& a) {
+	if (r - l == 1) return;
+	int m = (l + r) >> 1;
+	fwht(l, m, a), fwht(m, r, a);
+	dforn(i, 0, m - l - 1) {
+		int v1 = a[l + i], v2 = a[m + i];
+		a[l + i] = v1 + v2, a[m + i] = v1 - v2;
+	}
+}
+
+
+
+fwht(0, 16, a);
+dforn(i, 0, 15) a[i] *= a[i];
+fwht(0, 16, a);
+dforn(i, 0, 15) a[i] /= 16;

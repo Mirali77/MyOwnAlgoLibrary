@@ -1,0 +1,32 @@
+ll gcd(ll a, ll b) {
+	if (a == 0 || b == 0) return a + b;
+	while (a % b != 0 && b % a != 0) if (a > b) a %= b; else b %= a;
+	return min(a, b);
+}
+
+ll exgcd(ll a, ll b, ll & x, ll & y) {
+    if (b == 0) {
+        x = 1; y = 0;
+        return a;
+    }
+    ll g = exgcd(b, a % b, x, y);
+    ll mid = x;
+    x = y; y = mid - a / b * y;
+    return g;
+}
+
+bool diafant(ll a, ll b, ll c, ll& x0, ll& y0, ll& g) {
+    g = exgcd(abs(a), abs(b), x0, y0);
+    if (c % g) {
+        return false;
+    }
+    x0 *= c / g;
+    y0 *= c / g;
+    if (a < 0) {
+        x0 *= -1;
+    }
+    if (b < 0) {
+        y0 *= -1;
+    }
+    return true;
+}

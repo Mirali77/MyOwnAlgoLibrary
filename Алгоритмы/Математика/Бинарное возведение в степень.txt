@@ -1,0 +1,1 @@
+ll bpow(ll n, ll a) { return n == 0 ? 1 : n & 1 ? a * bpow(n - 1, a) % mod : bpow(n >> 1, a * a % mod); }

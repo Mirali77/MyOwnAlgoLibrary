@@ -1,0 +1,183 @@
+#include <stdlib.h>
+#include <iostream>
+#include <string>
+#include <deque>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <set>
+#include <queue>
+#include <fstream>
+#include <stack>
+#include <cmath>
+#include <bitset>
+#include <unordered_set>
+#include <unordered_map>
+#include <random>
+using namespace std;
+#define ll long long
+#define ull unsigned ll
+#define forn(i, n) for (ll i = 1; i <= n; i++)
+#define dforn(i, a, b) for (ll i = a; i <= b; i++)
+#define rforn(i, n) for (ll i = n; i >= 1; i--)
+#define rdforn(i, a, b) for (ll i = b; i >= a; i--)
+const ll mod = 1e9 + 7;
+const int N = 3 * 1e5 + 1;
+const ll inf = 1e17;
+const double eps = 1e-7;
+ 
+ll n, m;
+vector<pair<ll, pair<ll, ll>>> vec;
+struct DSU {
+	vector<ll> CountN;
+	vector<ll> Pred;
+	vector<pair<ll*, ll>> History;
+	void Init(ll n) {
+		CountN.resize(n);
+		Pred.resize(n);
+		for (ll i = 0; i < n; i++) {
+			CountN[i] = 1;
+			Pred[i] = i;
+		}
+	}
+ 
+	ll Get(ll p) {
+		if (Pred[p] != p) {
+			History.push_back({ &Pred[p], Pred[p] });
+			Pred[p] = Get(Pred[p]);
+		}
+		return Pred[p];
+	}
+ 
+	bool Check(ll a, ll b) {
+		return Get(a) == Get(b);
+	}
+ 
+	void Union(ll a, ll b) {
+		a = Get(a);
+		b = Get(b);
+		if (CountN[a] > CountN[b]) {
+			swap(a, b);
+		}
+		History.push_back({ &Pred[a], Pred[a] });
+		Pred[a] = b;
+		History.push_back({ &CountN[b], CountN[b] });
+		CountN[b] += CountN[a];
+	}
+ 
+	void RollBack(ll sz) {
+		while (History.size() > sz) {
+			*History.back().first = History.back().second;
+			History.pop_back();
+		}
+	}
+};
+DSU sys;
+ 
+struct seg_tree {
+	vector<vector<pair<ll, ll>>> tree;
+	ll size;
+ 
+	void init(ll n) {
+		size = 1;
+		while (size < n) {
+			size *= 2;
+		}
+		tree.resize(2 * size - 1);
+	}
+ 
+	void seg_set(ll v, ll l, ll r, ll ql, ll qr, pair<ll, ll> x) {
+		if (r <= ql || qr <= l) {
+			return;
+		}
+		if (ql <= l && r <= qr) {
+			tree[v].push_back(x);
+		}
+		else {
+			ll mid = (l + r) / 2;
+			seg_set(2 * v + 1, l, mid, ql, qr, x);
+			seg_set(2 * v + 2, mid, r, ql, qr, x);
+		}
+	}
+	void seg_set(ll ql, ll qr, pair<ll, ll> x) {
+		seg_set(0, 0, size, ql, qr, x);
+	}
+ 
+	void opt(ll x, ll lx, ll rx) {
+		if (rx == 1 || lx > m) {
+			return;
+		}
+		ll sz = sys.History.size();
+		forn(i, tree[x].size()) {
+			ll a = tree[x][i - 1].first, b = tree[x][i - 1].second;
+			sys.Union(a, b);
+		}
+		if (rx - lx == 1 && vec[lx].first == 2) {
+			ll a = vec[lx].second.first, b = vec[lx].second.second;
+			bool f = sys.Check(a, b);
+			if (f) {
+				cout << "Yes" << endl;
+			}
+			else {
+				cout << "No" << endl;
+			}
+		}
+		else if (rx - lx != 1) {
+			ll mid = (lx + rx) / 2;
+			opt(2 * x + 1, lx, mid);
+			opt(2 * x + 2, mid, rx);
+		}
+		sys.RollBack(sz);
+	}
+};
+ 
+void solve() {
+	cin >> n >> m;
+	vec.resize(m + 1);
+	vector<ll> waiting;
+	seg_tree Tr;
+	Tr.init(m + 1);
+	forn(i, m) {
+		ll t;
+		cin >> t; 
+		vec[i].first = t;
+		if (t != 3) {
+			cin >> vec[i].second.first >> vec[i].second.second;
+			if (t == 1) {
+				waiting.push_back(i);
+			}
+		}
+		else {
+			cin >> vec[i].second.first;
+			ll cnt = 0;
+			while (cnt < vec[i].second.first && !waiting.empty()) {
+				ll pos = waiting.back();
+				waiting.pop_back();
+				Tr.seg_set(pos, i, vec[pos].second);
+				cnt++;
+			}
+		}
+	}
+	while (!waiting.empty()) {
+		ll pos = waiting.back();
+		waiting.pop_back();
+		Tr.seg_set(pos, m + 1, vec[pos].second);
+	}
+	sys.Init(n + 1);
+	Tr.opt(0, 0, Tr.size);
+}
+ 
+int main()
+{
+	ios::sync_with_stdio(0);
+	cin.tie(0);
+	cout.tie(0);
+	ll t = 1;
+	//cin >> t;
+	while (t) {
+		t--;
+		solve();
+	}
+	return 0;
+}

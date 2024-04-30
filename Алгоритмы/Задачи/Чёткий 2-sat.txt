@@ -1,0 +1,149 @@
+#include <iostream>
+#include <string>
+#include <deque>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <set>
+#include <queue>
+#include <fstream>
+#include <stack>
+#include <cmath>
+#include <bitset>
+#include <unordered_set>
+#include <unordered_map>
+#include <random>
+#include <array>
+#include <chrono>
+#include <functional>
+#include <numeric>
+#include <complex>
+using namespace std;
+
+#define ll long long
+#define ld long double
+#define ull uint64_t
+#define pll pair<ll, ll>
+#define pii pair<int, int>
+#define pli pair<ll, int>
+#define plli pair<pll, int>
+#define pld pair<ld, ld>
+#define fst first
+#define snd second
+
+#define forn(i, n) for (int i = 1; i <= n; i++)
+#define dforn(i, a, b) for (int i = a; i <= b; i++) 
+#define rforn(i, n) for (int i = n; i >= 1; i--)
+#define rdforn(i, a, b) for (int i = b; i >= a; i--)
+#define sforn(i, a, b, s) for (ll i = a; i <= b; i += s)
+#define aforn(v, a) for (auto& v : a)
+#define sz(a) ((int)a.size())
+
+const int mod = 1e9 + 7;
+const ld pi = acos(-1);
+const ll N = 2e6;
+const ll inf = 1e17;
+const int iinf = 1 << 30;
+const ld dinf = 1e14;
+const double eps = 1e-8;
+
+void solve() {
+	vector<int> eratos(N + 1);
+	dforn(i, 2, N) {
+		if (eratos[i]) continue;
+		eratos[i] = i;
+		sforn(j, (ll)i * i, N, i) eratos[j] = i;
+	}
+	auto fact = [&](int x) {
+		vector<int> res;
+		while (x > 1) {
+			res.push_back(eratos[x]);
+			x /= eratos[x];
+		}
+		sort(res.begin(), res.end());
+		res.erase(unique(res.begin(), res.end()), res.end());
+		return res;
+	};
+	int n;
+	cin >> n;
+	vector<int> a(n + 1), b(n + 1);
+	vector<vector<int>> lst(N + 1);
+	auto add = [&](int x, int ind) {
+		vector<int> d = fact(x);
+		aforn(v, d) lst[v].push_back(ind);
+	};
+	int s = n;
+	forn(i, n) {
+		cin >> a[i] >> b[i];
+		add(a[i], i);
+		add(b[i], -i);
+	}
+	forn(i, N) {
+		if (lst[i].empty()) continue;
+		s += sz(lst[i]) * 4;
+	}
+	vector<vector<int>> sat(2 * s + 1), isat(2 * s + 1);
+	int cur = n;
+	forn(i, N) {
+		if (lst[i].empty()) continue;
+		dforn(j, 0, sz(lst[i]) - 1) {
+			sat[cur + j + 1].push_back(lst[i][j] > 0 ? lst[i][j] + s : -lst[i][j]);
+			isat[lst[i][j] > 0 ? lst[i][j] + s : -lst[i][j]].push_back(cur + j + 1);
+			if (j) {
+				sat[cur + j + 1].push_back(cur + j);
+				isat[cur + j].push_back(cur + j + 1);
+				sat[lst[i][j] > 0 ? lst[i][j] : -lst[i][j] + s].push_back(cur + j);
+				isat[cur + j].push_back(lst[i][j] > 0 ? lst[i][j] : -lst[i][j] + s);
+			}
+			sat[cur + sz(lst[i]) + j + 1].push_back(lst[i][j] > 0 ? lst[i][j] + s : -lst[i][j]);
+			isat[lst[i][j] > 0 ? lst[i][j] + s : -lst[i][j]].push_back(cur + sz(lst[i]) + j + 1);
+			if (j < sz(lst[i]) - 1) {
+				sat[cur + sz(lst[i]) + j + 1].push_back(cur + sz(lst[i]) + j + 2);
+				isat[cur + sz(lst[i]) + j + 2].push_back(cur + sz(lst[i]) + j + 1);
+				sat[lst[i][j] > 0 ? lst[i][j] : -lst[i][j] + s].push_back(cur + sz(lst[i]) + j + 2);
+				isat[cur + sz(lst[i]) + j + 2].push_back(lst[i][j] > 0 ? lst[i][j] : -lst[i][j] + s);
+			}
+		}
+		cur += 2 * sz(lst[i]);
+	}
+	vector<bool> used(2 * s + 1);
+	vector<int> st;
+	forn(i, 2 * s) {
+		function<void(int)> dfs = [&](int v) {
+			if (used[v]) return;
+			used[v] = true;
+			aforn(to, sat[v]) dfs(to);
+			st.push_back(v);
+		};
+		dfs(i);
+	}
+	used.assign(2 * s + 1, false);
+	vector<vector<int>> comp;
+	vector<int> mark(2 * s + 1);
+	while (sz(st)) {
+		int v = st.back();
+		st.pop_back();
+		if (used[v]) continue;
+		comp.push_back(vector<int>());
+		function<void(int)> dfs = [&](int v) {
+			if (used[v]) return;
+			used[v] = true;
+			mark[v] = sz(comp) - 1;
+			comp.back().push_back(v);
+			aforn(to, isat[v]) dfs(to);
+		};
+		dfs(v);
+	}
+	forn(i, s) if (mark[i] == mark[i + s]) { cout << "No" << '\n'; return; }
+	cout << "Yes" << '\n';
+}
+
+int main()
+{
+	ios::sync_with_stdio(0); cin.tie(0); cout.tie(0);
+	int t = 1;
+	//cin >> t;
+	while (t--) solve();
+	return 0;
+}

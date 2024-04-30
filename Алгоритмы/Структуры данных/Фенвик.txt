@@ -1,0 +1,22 @@
+template <typename T>
+struct BIT {
+	vector<T> f;
+	BIT(int n) { f.resize(n); }
+	void set(int i, T v) { for (; i < f.size(); i += i & -i) f[i] += v; }
+	T sum(int r) {
+		T res = 0;
+		for (int i = r; i > 0; i -= i & -i) res += f[i];
+		return res;
+	}
+	T sum(int l, int r) { return l > r ? 0 :sum(r) - sum(l - 1); }
+	int search(T v) {
+		int pos = 0;
+		rdforn(i, 0, 18) {
+			if (pos + (1 << i) < f.size() && f[pos + (1 << i)] < v) {
+				pos += (1 << i);
+				v -= f[pos];
+			}
+		}
+		return pos + 1;
+	}
+};

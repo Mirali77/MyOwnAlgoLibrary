@@ -1,0 +1,100 @@
+template <typename T>
+struct SimplexMethod {
+	int n, slack = 0, art = 0, cs = 0, sp = 0, ap = 0, s;
+	vector<pair<vector<T>, T>> constraints;
+	vector<vector<T>> tab;
+	vector<int> basis, type, sord, aord;
+	SimplexMethod(int sn) : n(sn) {}
+	//1 - less, 2 - greater, 3 - equal
+	void add_constraint(vector<T> constraint, T lim, int t) {
+		if (lim < 0) {
+			lim *= -1;
+			aforn(v, constraint) v *= -1;
+			if (t == 1) t = 2; else if (t == 2) t = 1;
+		}
+		constraints.push_back({ constraint, lim }); cs++;
+		if (t == 1) slack++;
+		else if (t == 2) slack++, art++;
+		else art++;
+		sord.push_back(0);
+		aord.push_back(0);
+		type.push_back(t);
+	}
+	void init(vector<T>& func) {
+		s = n + slack + art;
+		tab.resize(cs + 1, vector<T>(s + 1));
+		basis.resize(cs);
+		dforn(i, 0, cs - 1) {
+			basis[i] = n + i;
+			dforn(j, 0, sz(constraints[i].fst) - 1) tab[i][j] = constraints[i].fst[j];
+			tab[i].back() = constraints[i].snd;
+			if (type[i] == 1) sord[i] = sp++, tab[i][n + sord[i]] = 1, basis[i] = n + sord[i];
+			else if (type[i] == 2) sord[i] = sp++, aord[i] = ap++, tab[i][n + sord[i]] = -1, tab[i][n + slack + aord[i]] = 1, basis[i] = n + slack + aord[i];
+			else aord[i] = ap++, tab[i][n + slack + aord[i]] = 1, basis[i] = n + slack + aord[i];
+		}
+		dforn(i, 0, sz(func) - 1) tab.back()[i] = -func[i];
+	}
+	pair<int, int> find_opt() {
+		ld mn = -1; int best = -1;
+		rdforn(i, 0, s - 1) if (tab.back()[i] < mn) mn = tab.back()[i], best = i;
+		int j = min_element(tab.back().begin(), tab.back().end() - 1) - tab.back().begin();
+		if (tab.back()[j] >= 0) return { -1, -1 };
+		mn = -1, best = -1;
+		dforn(i, 0, cs - 1) {
+			if (tab[i][j] == 0) continue;
+			ld k = (ld)tab[i].back() / tab[i][j]; if (k == 0 && tab[i][j] < 0) continue;
+			if (k >= 0 && (mn == -1 || k < mn || k == mn && basis[best] < basis[i])) mn = k, best = i;
+		}
+		if (best == -1) return { -1, -1 };
+		return { best, j };
+	}
+	void upd(pair<int, int>& p) {
+		basis[p.fst] = p.snd;
+		int ri = p.fst, rj = p.snd; ld k = tab[ri][rj];
+		dforn(j, 0, s) tab[ri][j] /= k;
+		dforn(i, 0, sz(tab) - 1) {
+			if (i == ri) continue;
+			k = tab[i][rj];
+			dforn(j, 0, s) tab[i][j] -= tab[ri][j] * k;
+		}
+	}
+	void first_phase() {
+		if (art == 0) return;
+		tab.push_back(vector<T>(s + 1));
+		dforn(i, 0, cs - 1) {
+			if (type[i] == 1) continue;
+			tab.back()[n + slack + aord[i]] = 1;
+			dforn(j, 0, s) tab.back()[j] -= tab[i][j];
+		}
+		pair<int, int> p;
+		while ((p = find_opt()).fst != -1) upd(p);
+		tab.pop_back();
+		vector<vector<T>> ntab; int del = 0;
+		dforn(i, 0, cs) {
+			if (i < cs && basis[i] >= n + slack) { del++; continue; }
+			ntab.push_back(vector<T>());
+			dforn(j, 0, s) if (j < n + slack || j == s) ntab.back().push_back(tab[i][j]);
+		}
+		tab = ntab;
+		s -= art; cs -= del;
+	}
+	void second_phase() {
+		pair<int, int> p;
+		while ((p = find_opt()).fst != -1) upd(p);
+	}
+	T maximize(vector<T> func) {
+		init(func);
+		first_phase();
+		second_phase();
+		return tab.back().back();
+	};
+	T minimize(vector<T> func) {
+		dforn(i, 0, sz(func) - 1) func[i] *= -1;
+		return -maximize(func);
+	}
+	vector<T> get_sol() {
+		vector<T> res(n);
+		dforn(i, 0, cs - 1) if (basis[i] < n) res[basis[i]] = tab[i].back();
+		return res;
+	}
+};

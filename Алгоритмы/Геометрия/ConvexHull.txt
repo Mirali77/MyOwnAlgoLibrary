@@ -1,0 +1,92 @@
+struct ConvexHull {
+	vector<pll> lower, upper;
+	ll dist(pll p1, pll p2) {
+		return (p1.fst - p2.fst) * (p1.fst - p2.fst) + (p1.snd - p2.snd) * (p1.snd - p2.snd);
+	}
+	pll dif(pll p1, pll p2) {
+		p1.fst -= p2.fst;
+		p1.snd -= p2.snd;
+		return p1;
+	}
+	ll vpr(pll p1, pll p2) {
+		return p1.fst * p2.snd - p1.snd * p2.fst;
+	}
+	ConvexHull() {}
+	ConvexHull(vector<pll> v) {
+		sort(v.begin(), v.end());
+		upper.push_back(v[0]);
+		lower.push_back(v[0]);
+		aforn(p, v) {
+			while (upper.size() >= 2 && vpr(dif(p, upper.back()), dif(upper[upper.size() - 2], upper.back())) <= 0) {
+				upper.pop_back();
+			}
+			while (lower.size() >= 2 && vpr(dif(p, lower.back()), dif(lower[lower.size() - 2], lower.back())) >= 0) {
+				lower.pop_back();
+			}
+			upper.push_back(p);
+			lower.push_back(p);
+		}
+	}
+	ll search(ll x, ll y) {
+		auto calc = [&](pll p) {
+			return x * p.fst + y * p.snd;
+		};
+		ll ans = -inf;
+		if (upper.size() == 1) {
+			ans = calc(upper[0]);
+		}
+		else {
+			ll l = -1, r = upper.size() - 1;
+			while (r - l > 1) {
+				ll m = (l + r) >> 1;
+				ll f1 = calc(upper[m]), f2 = calc(upper[m + 1]);
+				if (f1 < f2) {
+					l = m;
+				}
+				else {
+					r = m;
+				}
+			}
+			ans = max( ans, calc(upper[l + 1]));
+		}
+		if (lower.size() == 1) {
+			ans = calc(lower[0]);
+		}
+		else {
+			ll l = -1, r = lower.size() - 1;
+			while (r - l > 1) {
+				ll m = (l + r) >> 1;
+				ll f1 = calc(lower[m]), f2 = calc(lower[m + 1]);
+				if (f1 < f2) {
+					l = m;
+				}
+				else {
+					r = m;
+				}
+			}
+			ans = max(ans, calc(lower[l + 1]));
+		}
+		return ans;
+	};
+};
+
+struct Node {
+	ConvexHull sys;
+	vector<pll> pnts;
+	Node() {};
+	Node(vector<pll> v) {
+		pnts = v;
+		sys = ConvexHull(v);
+	}
+};
+
+void merge(Node& n1, Node& n2) {
+	vector<pll> v;
+	aforn(p, n1.pnts) {
+		v.push_back(p);
+	}
+	aforn(p, n2.pnts) {
+		v.push_back(p);
+	}
+	n1 = Node(v);
+}

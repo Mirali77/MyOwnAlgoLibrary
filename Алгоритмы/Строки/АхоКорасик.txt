@@ -1,0 +1,56 @@
+struct AhoCorasick {
+	struct Vert {
+		map<int, int> nxt, go;
+		bool leaf;
+		int fa, fa_val, link;
+		Vert(int fa = -1, int fa_val = -1, int link = -1) : fa(fa), fa_val(fa_val), link(link), leaf(false) {};
+	};
+	vector<Vert> t;
+	AhoCorasick() {
+		t.push_back(Vert());
+	}
+	void add(vector<int>& v) {
+		int pos = 0;
+		aforn(g, v) {
+			if (!t[pos].nxt.count(g)) {
+				t.push_back(Vert(pos, g));
+				t[pos].nxt[g] = t.size() - 1;
+			}
+			pos = t[pos].nxt[g];
+		}
+		t[pos].leaf = true;
+	}
+	int go(int v, int val);
+	int get_link(int v) {
+		if (t[v].link == -1) {
+			if (v == 0 || t[v].fa == 0) {
+				t[v].link = 0;
+			}
+			else {
+				t[v].link = go(get_link(t[v].fa), t[v].fa_val);
+			}
+		}
+		return t[v].link;
+	}
+	bool search(vector<int>& v) {
+		int pos = 0;
+		aforn(g, v) {
+			pos = go(pos, g);
+			if (t[pos].leaf) {
+				return true;
+			}
+		}
+		return false;
+	}
+};
+int AhoCorasick::go(int v, int val) {
+	if (!t[v].go.count(val)) {
+		if (t[v].nxt.count(val)) {
+			t[v].go[val] = t[v].nxt[val];
+		}
+		else {
+			t[v].go[val] = v == 0 ? 0 : go(get_link(v), val);
+		}
+	}
+	return t[v].go[val];
+}

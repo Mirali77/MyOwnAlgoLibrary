@@ -1,0 +1,62 @@
+struct Dinic {
+	int n, s, t;
+	vector<vector<int>> c;
+	vector<int> d, left;
+	Dinic(int sn, vector<vector<int>>& nc, int ns, int nt) {
+		n = sn, c = nc, s = ns, t = nt;
+		d.resize(n);
+		left.resize(n);
+	}
+	void buildNet() {
+		d.assign(n, -1);
+		queue<int> q;
+		d[s] = 0;
+		q.push(s);
+		while (!q.empty()) {
+			int v = q.front();
+			q.pop();
+			dforn(i, 0, n - 1) {
+				if (d[i] == -1 && c[v][i] > 0) {
+					d[i] = d[v] + 1;
+					q.push(i);
+				}
+			}
+		}
+	}
+	int push(int v, int flow) {
+		if (v == t) {
+			return flow;
+		}
+		for (; left[v] < n; left[v]++) {
+			int to = left[v];
+			if (d[to] == d[v] + 1 && c[v][to] > 0) {
+				int AugFlow = push(to, min(flow, c[v][to]));
+				if (AugFlow > 0) {
+					c[v][to] -= AugFlow;
+					c[to][v] += AugFlow;
+					return AugFlow;
+				}
+			}
+		}
+		return 0;
+	}
+	int maxflow() {
+		int res = 0;
+		while (true) {
+			buildNet();
+			if (d[t] == -1)
+				break;
+ 
+			left.assign(n, 0);
+ 
+			while (true) {
+				int AugFlow = push(0, inf);
+				if (AugFlow == 0)
+					break;
+				else
+					res += AugFlow;
+			}
+		}
+		return res;
+	}
+};

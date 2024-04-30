@@ -1,0 +1,33 @@
+ll n, timer = 0;
+vector<vector<ll>> kek, bin;
+vector<ll> tin, tout;
+void precalc(ll v, ll p) {
+	tin[v] = ++timer;
+	bin[v][0] = p;
+	forn(i, 18) {
+		bin[v][i] = bin[bin[v][i - 1]][i - 1];
+	}
+	forn(i, kek[v].size()) {
+		if (kek[v][i - 1] != p) {
+			precalc(kek[v][i - 1], v);
+		}
+	}
+	tout[v] = ++timer;
+}
+bool is_anc(ll a, ll b) {
+	return tin[a] <= tin[b] && tout[a] >= tout[b];
+}
+ll lca(ll a, ll b) {
+	if (is_anc(a, b)) {
+		return a;
+	}
+	if (is_anc(b, a)) {
+		return b;
+	}
+	rdforn(i, 0, 18) {
+		if (!is_anc(bin[a][i], b)) {
+			a = bin[a][i];
+		}
+	}
+	return bin[a][0];
+}

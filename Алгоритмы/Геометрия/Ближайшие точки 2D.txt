@@ -1,0 +1,31 @@
+function<ll(vector<pair<ll, ll>>)> DC = [&](vector<pair<ll, ll>> v) {
+		int n = v.size();
+		if (n == 1) {
+			return inf;
+		}
+		sort(v.begin(), v.end());
+		vector<pair<ll, ll>> v1, v2, v3;
+		dforn(i, 0, (n - 1) / 2) {
+			v1.push_back(v[i]);
+		}
+		dforn(i, (n - 1) / 2 + 1, n - 1) {
+			v2.push_back(v[i]);
+		}
+		ll res = min(DC(v1), DC(v2));
+		ll mid = (v1.back().first);
+		dforn(i, 0, v.size() - 1) {
+			if (abs(v[i].first - mid) < res) {
+				v3.push_back({ v[i].second, v[i].first });
+			}
+		}
+		sort(v3.begin(), v3.end());
+		dforn(i, 0, v3.size() - 1) {
+			dforn(j, i + 1, i + 7) {
+				if (j > v3.size() - 1) {
+					break;
+				}
+				res = min(res, dist(v3[i], v3[j]));
+			}
+		}
+		return res;
+	};

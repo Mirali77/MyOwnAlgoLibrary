@@ -1,0 +1,42 @@
+ll func(pair<ll, ll> line, ll x) {
+	return line.first * x + line.second;
+}
+struct LiChao {
+	vector<pair<ll, ll>> t;
+	ll n;
+	LiChao(ll cn) {
+		n = cn;
+		t.resize(4 * n, {inf, inf});
+	}
+	// v = 1, l = 0, r = n
+	void add(pair<ll, ll> line, ll v, ll l, ll r) {
+		ll m = (l + r) >> 1;
+		bool left = func(line, l) < func(t[v], l);
+		bool mid = func(line, m) < func(t[v], m);
+		if (mid) {
+			swap(t[v], line);
+		}
+		if (r - l == 1) {
+			return;
+		}
+		if (left != mid) {
+			add(line, 2 * v, l, m);
+		}
+		else {
+			add(line, 2 * v + 1, m, r);
+		}
+	}
+	// v = 1, l = 0, r = n
+	ll query(ll x, ll v, ll l, ll r) {
+		ll m = (l + r) >> 1;
+		if (r - l == 1) {
+			return func(t[v], x);
+		}
+		if (x < m) {
+			return min(func(t[v], x), query(x, 2 * v, l, m));
+		}
+		else {
+			return min(func(t[v], x), query(x, 2 * v + 1, m, r));
+		}
+	}
+};

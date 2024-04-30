@@ -1,0 +1,117 @@
+#include <iostream>
+#include <string>
+#include <deque>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <set>
+#include <queue>
+#include <fstream>
+#include <stack>
+#include <cmath>
+#include <bitset>
+#include <unordered_set>
+#include <unordered_map>
+#include <random>
+#include <array>
+#include <chrono>
+#include <functional>
+#include <numeric>
+#include <complex>
+using namespace std;
+
+#define ll long long
+#define ld long double
+#define ull uint64_t
+#define pll pair<ll, ll>
+#define pii pair<int, int>
+#define pli pair<ll, int>
+#define plli pair<pll, int>
+#define pld pair<ld, ld>
+#define fst first
+#define snd second
+#define pdi pair<ld, int>
+
+#define forn(i, n) for (int i = 1; i <= n; i++)
+#define dforn(i, a, b) for (int i = a; i <= b; i++) 
+#define rforn(i, n) for (int i = n; i >= 1; i--)
+#define rdforn(i, a, b) for (int i = b; i >= a; i--)
+#define sforn(i, a, b, s) for (ll i = a; i <= b; i += s)
+#define aforn(v, a) for (auto& v : a)
+#define sz(a) ((int)a.size())
+
+const int mod = 998244353;
+const ld pi = acos(-1);
+const ll N = 1e6;
+const ll inf = 1e17;
+const int iinf = 1 << 30;
+const ld dinf = 1e9;
+const double eps = 1e-2;
+
+//test case: in.txt
+//solve output: out1.txt
+//naive output: out2.txt
+ofstream fgen, fout1, fout2;
+ifstream fin, fin1, fin2;
+
+void generate() {
+	fgen.open("in.txt");
+	random_device rd;
+	mt19937 gen(rd());
+	// random value in range from l to r
+	auto rng = [&](int l, int r) { return gen() % (r - l + 1) + l; };
+
+	int n, m, k;
+	n = rng(1, 50), m = rng(1, 50), k = rng(1, int(1e9));
+
+	fgen << n << " " << m << " " << k << '\n';
+	forn(i, n) fgen << rng(1, int(1e9)) << (i == n ? '\n' : ' ');
+	forn(i, m) fgen << rng(1, int(1e9)) << (i == m ? '\n' : ' ');
+
+	fgen.close();
+}
+
+void solve() {
+	fin.open("in.txt"), fout1.open("out1.txt");
+	
+	// your code
+
+	fin.close(); fout1.close();
+}
+
+void naive() {
+	fin.open("in.txt"), fout2.open("out2.txt");
+	
+	//your code
+
+	fin.close(); fout1.close();
+}
+
+bool check() {
+	generate();
+	solve();
+	naive();
+	fin1.open("out1.txt"), fin2.open("out2.txt");
+	auto shut = [&]() { fin1.close(), fin2.close(); };
+	for (string s1, s2; getline(fin1, s1), getline(fin2, s2);) {
+		if (s1 != s2) {
+			cout << "Found!" << '\n';
+			shut();
+			return true;
+		}
+	}
+	shut();
+	return false;
+}
+
+int main()
+{
+	ios::sync_with_stdio(0); cin.tie(0); cout.tie(0);
+	int t = 100;
+	//cin >> t;
+	while (t--) {
+		if (check()) break;
+	}
+	return 0;
+}

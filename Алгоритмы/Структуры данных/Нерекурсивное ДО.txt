@@ -1,0 +1,101 @@
+template <typename T>
+struct seg_tree {
+	int n = 1;
+	vector<T> t;
+	seg_tree(int sn) {
+		while (n < sn) n <<= 1;
+		t.resize(2 * n);
+	}
+	void build(vector<T>& a) {
+		dforn(i, 0, a.size() - 1) t[i + n] = a[i];
+		rforn(i, n - 1) t[i] = t[2 * i] + t[2 * i + 1];
+	}
+	void set(int i, T v) {
+		t[i += n] = v;
+		for (i >>= 1; i >= 1; i >>= 1) t[i] = t[2 * i] + t[2 * i + 1];
+	}
+	T query(int l, int r) {
+		T res = 0;
+		for (l += n, r += n; l <= r; l >>= 1, r >>= 1) {
+			if (l & 1) res += t[l++];
+			if (!(r & 1)) res += t[r--];
+		}
+		return res;
+	}
+};
+
+-------------------------------------------------------------------------------------
+struct seg_tree {
+    ll n = 1, ht = 1;
+    vector<ll> t, add;
+    seg_tree(ll sn) {
+	while (n < sn) {
+            n *= 2;
+	    ht++;
+        }
+        t.resize(2 * n, -inf);
+        add.resize(n);
+    }
+    void build(vector<ll>& a) {
+        dforn(i, 0, a.size() - 1) {
+            t[i + n] = a[i];
+        }
+        rforn(i, n - 1) {
+            t[i] = max(t[2 * i], t[2 * i + 1]);
+        }
+    }
+    void upd_v(ll x, ll v) {
+        t[x] += v;
+        if (x < n) {
+            add[x] += v;
+        }
+    }
+    void upd_anc(ll v) {
+        v >>= 1;
+        while (v) {
+            t[v] = max(t[2 * v], t[2 * v + 1]) + add[v];
+            v >>= 1;
+        }
+    }
+    void push(ll x) {
+        rforn(k, ht) {
+            ll v = x >> k;
+            upd_v(v * 2, add[v]);
+            upd_v(v * 2 + 1, add[v]);
+            add[v] = 0;
+        }
+    }
+    void set(ll i, ll v) {
+        push(i += n);
+        t[i] += v;
+        for (i /= 2; i >= 1; i /= 2) {
+            t[i] = max(t[2 * i], t[2 * i + 1]);
+        }
+    }
+    void seg_set(ll l, ll r, ll val) {
+        ll ql = l += n, qr = r += n;
+        for (; l <= r; l /= 2, r /= 2) {
+            if (l & 1) {
+                upd_v(l++, val);
+            }
+            if (!(r & 1)) {
+                upd_v(r--, val);
+            }
+        }
+        upd_anc(ql);
+        upd_anc(qr);
+    }
+    ll query(ll l, ll r) {
+        push(l += n); push(r += n);
+        ll res = -inf;
+        for (; l <= r; l /= 2, r /= 2) {
+            if (l & 1) {
+                res = max(res, t[l++]);
+            }
+            if (!(r & 1)) {
+                res = max(res, t[r--]);
+            }
+        }
+        return res;
+    }
+};

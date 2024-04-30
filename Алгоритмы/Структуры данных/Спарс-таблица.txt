@@ -1,0 +1,48 @@
+struct sparse_table_mx {
+	ll n;
+	vector<ll> lg;
+	vector<vector<ll>> sparse;
+	sparse_table_mx(vector<ll>& a) {
+		n = a.size();
+		lg.resize(n + 1);
+		dforn(i, 2, n) {
+			lg[i] = lg[i >> 1] + 1;
+		}
+		ll pw = ceil(log2(n + 1));
+		sparse.resize(pw, vector<ll>(n));
+		sparse[0] = a;
+		dforn(j, 0, pw - 2) {
+			for (ll i = 0; i + (1LL << j) < n; i++) {
+				sparse[j + 1][i] = max(sparse[j][i], sparse[j][i + (1LL << j)]);
+			}
+		}
+	}
+	ll get(ll l, ll r) {
+		ll pw = lg[r - l];
+		return max(sparse[pw][l], sparse[pw][r - (1LL << pw)]);
+	}
+};
+struct sparse_table_mn {
+	ll n;
+	vector<ll> lg;
+	vector<vector<ll>> sparse;
+	sparse_table_mn(vector<ll>& a) {
+		n = a.size();
+		lg.resize(n + 1);
+		dforn(i, 2, n) {
+			lg[i] = lg[i >> 1] + 1;
+		}
+		ll pw = ceil(log2(n + 1));
+		sparse.resize(pw, vector<ll>(n));
+		sparse[0] = a;
+		dforn(j, 0, pw - 2) {
+			for (ll i = 0; i + (1LL << j) < n; i++) {
+				sparse[j + 1][i] = min(sparse[j][i], sparse[j][i + (1LL << j)]);
+			}
+		}
+	}
+	ll get(ll l, ll r) {
+		ll pw = lg[r - l];
+		return min(sparse[pw][l], sparse[pw][r - (1LL << pw)]);
+	}
+};

@@ -1,0 +1,30 @@
+//Асимптотика:
+//Создание префикс функции: O(n)
+//КМП (создание префикс-функции по сумме строк t и s): O(n + m), где n - длина s, m - длина t
+//КМП находит все вхождения t в s за один проход
+
+vector<ll> prefix_function(string s) {
+	ll n = s.length();
+	vector<ll> pi(n);
+	for (ll i = 1; i < n; ++i) {
+		ll j = pi[i - 1];
+		while (j > 0 && s[i] != s[j])
+			j = pi[j - 1];
+		if (s[i] == s[j])  ++j;
+		pi[i] = j;
+	}
+	return pi;
+}
+
+//Возвращает вектор индексов вхождения t в s
+vector<ll> KMP(string t, string s) {
+	string curs = t + '#' + s;
+	vector<ll> pref = prefix_function(curs);
+	vector<ll> res;
+	for (ll j = t.size() + 1; j < curs.size(); j++) {
+		if (pref[j] == t.size()) {
+			res.push_back(j - t.size() * 2);
+		}
+	}
+	return res;
+}

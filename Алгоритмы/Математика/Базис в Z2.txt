@@ -1,0 +1,38 @@
+struct basis {
+    vector<int> base;
+    int d;
+    basis() {
+        base.resize(30);
+        d = 0;
+    }
+    void insert(int mask) {
+        rdforn(i, 0, 29) {
+            if (!(mask & (1 << i))) continue;
+            if (!base[i]) {
+                base[i] = mask;
+                d++;
+                return;
+            }
+            mask ^= base[i];
+        }
+    }
+    int get_max() {
+        int res = 0;
+        rdforn(i, 0, 29) {
+            if (!base[i]) {
+                continue;
+            }
+            if (!(res & (1 << i))) res ^= base[i];
+        }
+        return res;
+    }
+};
+
+basis merge(basis b1, basis b2) {
+    dforn(i, 0, 29) {
+        if (b2.base[i]) {
+            b1.insert(b2.base[i]);
+        }
+    }
+    return b1;
+}

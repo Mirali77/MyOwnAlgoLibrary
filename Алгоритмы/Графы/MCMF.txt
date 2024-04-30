@@ -1,0 +1,73 @@
+template <typename Cost, typename Cap>
+struct MCMF {
+	struct Edge {
+		int from, to;
+		Cost cost;
+		Cap cap;
+		Edge(int from, int to, Cap cap, Cost cost) : from(from), to(to), cost(cost), cap(cap) {}
+	};
+	int n; Cost inf;
+	vector<Edge> edg;
+	vector<vector<int>> adj;
+	vector<Cost> pot, dist;
+	vector<bool> used; vector<int> from;
+	MCMF(int sn, Cost c_inf) { n = sn; inf = c_inf; adj.resize(n); pot.resize(n); dist.resize(n); used.resize(n); from.resize(n, -1); }
+	void add_edge(int from, int to, Cap cap, Cap cost) {
+		int k = sz(edg);
+		edg.push_back(Edge(from, to, cap, cost));
+		edg.push_back(Edge(to, from, 0, -cost));
+		adj[from].push_back(k);
+		adj[to].push_back(k ^ 1);
+	}
+	void init(int s) {
+		function<Cost(int)> dfs = [&](int v) {
+			if (used[v]) return dist[v];
+			used[v] = true;
+			if (v == s) return dist[v] = pot[v] = 0;
+			dist[v] = pot[v] = inf;
+			aforn(to, adj[v]) if (to & 1) {
+				Cost cand = dfs(edg[to].to) - edg[to].cost;
+				if (cand < dist[v]) dist[v] = pot[v] = cand, from[v] = to ^ 1;
+			}
+			return dist[v];
+		};
+		dforn(i, 0, n - 1) dfs(i);
+	}
+	Cost calc(int s, int t, ll k = -1) {
+		bool f = true;
+		init(s);
+		Cost ans = 0;
+		while (k--) {
+			if (!f) {
+				used.assign(n, false), from.assign(n, -1), dist.assign(n, inf);
+				priority_queue<pair<Cost, int>, vector<pair<Cost, int>>, greater<pair<Cost, int>>> pq;
+				pq.push({ dist[s] = 0, s });
+				while (sz(pq)) {
+					int h = pq.top().snd;
+					pq.pop();
+					used[h] = true;
+					aforn(to, adj[h]) {
+						if (edg[to].cap == 0 || used[edg[to].to]) continue;
+						if (dist[edg[to].to] > dist[h] + edg[to].cost + pot[h] - pot[edg[to].to]) {
+							dist[edg[to].to] = dist[h] + edg[to].cost + pot[h] - pot[edg[to].to];
+							from[edg[to].to] = to;
+							pq.push({ dist[edg[to].to], edg[to].to });
+						}
+					}
+				}
+				dforn(i, 0, n - 1) dist[i] -= pot[s] - pot[i];
+				dforn(i, 0, n - 1) pot[i] = dist[i];
+			}
+			f = false;
+			if (!used[t]) break;
+			int pos = t;
+			while (pos != s) {
+				edg[from[pos]].cap--;
+				edg[from[pos] ^ 1].cap++;
+				ans += edg[from[pos]].cost;
+				pos = edg[from[pos]].from;
+			}
+		}
+		return ans;
+	}
+};

@@ -1,0 +1,317 @@
+//Декартово Дерево: асимптотика всех операций: O(logn)
+struct Treap {
+	static minstd_rand generator;
+
+	struct Node {
+		ll key, priority;
+		Node* l = nullptr, * r = nullptr;
+		Node(ll key) : key(key), priority(generator()) {}
+	} *root = nullptr;
+
+	//В первом дереве ключи меньше, чем во втором
+	static Node* merge(Node* a, Node* b) {
+		if (a == nullptr) {
+			return b;
+		}
+		if (b == nullptr) {
+			return a;
+		}
+		if (a->priority > b->priority) {
+			a->r = merge(a->r, b);
+			return a;
+		}
+		else {
+			b->l = merge(a, b->l);
+			return b;
+		}
+	}
+
+	//Получившиеся деревья записываются в a и b
+	void split(Node* n, ll key, Node*& a, Node*& b) {
+		if (n == nullptr) {
+			a = b = nullptr;
+			return;
+		}
+		if (n->key < key) {
+			split(n->r, key, n->r, b);
+			a = n;
+		}
+		else {
+			split(n->l, key, a, n->l);
+			b = n;
+		}
+	}
+
+	//Поиск элемента в дереве
+	bool find(ll key) {
+		Node* greater, * equal, * less;
+		split(root, key, less, greater);
+		split(greater, key + 1, equal, greater);
+		bool result = equal;
+		root = merge(merge(less, equal), greater);
+		return result;
+	}
+
+	//Добавление элемента в дерево
+	void insert(ll key) {
+		Node *greater, *less;
+		split(root, key, less, greater);
+		less = merge(less, new Node(key));
+		root = merge(less, greater);
+	}
+
+	//Удаление элемента из дерева
+	void erase(ll key) {
+		Node* greater, * less, * equal;
+		split(root, key, less, greater);
+		split(greater, key + 1, equal, greater);
+		root = merge(less, greater);
+	}
+};
+minstd_rand Treap::generator;
+
+----------------------------------------------------------------------------------------------------------------------------
+Декартово дерево с обновлением на отрезке (пример из задачи):
+struct Treap {
+	static minstd_rand generator;
+
+	struct Node {
+		ll key, priority;
+		Node* l = nullptr, * r = nullptr;
+		ll num, add = 0, max_val, min_val;
+		Node(ll key, ll num) : key(key), priority(generator()), num(num), max_val(num), min_val(num) {}
+	} *root = nullptr;
+
+	static void push(Node*& n) {
+		if (n && n->add) {
+			//n->key += n->add;
+			n->num += n->add;
+			n->max_val += n->add;
+			if (n->l) {
+				n->l->add += n->add;
+			}
+			if (n->r) {
+				n->r->add += n->add;
+			}
+			n->add = 0;
+		}
+	}
+
+	static void update(Node*& n) {
+		if (!n) {
+			return;
+		}
+		push(n);
+		n->max_val = n->num;
+		n->min_val = n->num;
+		if (n->r != nullptr) {
+			push(n->r);
+			n->max_val = max(n->max_val, n->r->max_val);
+			n->min_val = min(n->min_val, n->r->min_val);
+		}
+		if (n->l != nullptr) {
+			push(n->l);
+			n->max_val = max(n->max_val, n->l->max_val);
+			n->min_val = min(n->min_val, n->l->min_val);
+		}
+	}
+
+	//В первом дереве ключи меньше, чем во втором
+	static Node* merge(Node* a, Node* b) {
+		push(a);
+		push(b);
+		if (a == nullptr) {
+			update(b);
+			return b;
+		}
+		if (b == nullptr) {
+			update(a);
+			return a;
+		}
+		update(a);
+		update(b);
+		if (a->priority > b->priority) {
+			//push(a->r);
+			a->r = merge(a->r, b);
+			update(a);
+			return a;
+		}
+		else {
+			//push(b->l);
+			b->l = merge(a, b->l);
+			update(b);
+			return b;
+		}
+	}
+
+	//Получившиеся деревья записываются в a и b
+	void split(Node* n, ll key, Node*& a, Node*& b) {
+		push(n);
+		if (n == nullptr) {
+			a = b = nullptr;
+			return;
+		}
+		if (n->key < key) {
+			split(n->r, key, n->r, b);
+			a = n;
+		}
+		else {
+			split(n->l, key, a, n->l);
+			b = n;
+		}
+		update(a);
+		update(b);
+	}
+
+	//Поиск элемента в дереве
+	bool find(ll key) {
+		Node* greater, * equal, * less;
+		split(root, key, less, greater);
+		split(greater, key + 1, equal, greater);
+		bool result = equal;
+		root = merge(merge(less, equal), greater);
+		return result;
+	}
+
+	//Добавление элемента в дерево
+	void insert(ll key, ll num) {
+		Node* greater, * less;
+		split(root, key, less, greater);
+		less = merge(less, new Node(key, num));
+		root = merge(less, greater);
+	}
+
+	//Удаление элемента из дерева
+	void erase(ll key) {
+		Node* greater, * less, * equal;
+		split(root, key, less, greater);
+		split(greater, key + 1, equal, greater);
+		root = merge(less, greater);
+	}
+
+	//Продажа билета
+	bool sell(ll x, ll y) {
+		Node* left, * middle, * right;
+		split(root, x, left, middle);
+		split(middle, y + 1, middle, right);
+		update(middle);
+		bool res = true;
+		if (middle->max_val == k) {
+			res = false;
+		}
+		if (res) {
+			middle->add += 1;
+		}
+		root = merge(merge(left, middle), right);
+		return res;
+	}
+};
+minstd_rand Treap::generator;
+
+-----------------------------------------------------------------------------------------------------------
+Поиск порядка элемента в множестве (замена индексации сета):
+struct Treap {
+	static minstd_rand generator;
+
+	struct Node {
+		ll key, priority, size = 1;
+		Node* l = nullptr, * r = nullptr;
+		Node(ll key) : key(key), priority(generator()) {}
+	} *root = nullptr;
+
+	static void update(Node* n) {
+		if (n) {
+			n->size = 1;
+			if (n->l) {
+				n->size += n->l->size;
+			}
+			if (n->r) {
+				n->size += n->r->size;
+			}
+		}
+	}
+
+	//В первом дереве ключи меньше, чем во втором
+	static Node* merge(Node* a, Node* b) {
+		update(a);
+		update(b);
+		if (a == nullptr) {
+			return b;
+		}
+		if (b == nullptr) {
+			return a;
+		}
+		if (a->priority > b->priority) {
+			a->r = merge(a->r, b);
+			update(a);
+			return a;
+		}
+		else {
+			b->l = merge(a, b->l);
+			update(b);
+			return b;
+		}
+	}
+
+	//Получившиеся деревья записываются в a и b
+	void split(Node* n, ll key, Node*& a, Node*& b) {
+		update(n);
+		if (n == nullptr) {
+			a = b = nullptr;
+			return;
+		}
+		if (n->key < key) {
+			split(n->r, key, n->r, b);
+			a = n;
+		}
+		else {
+			split(n->l, key, a, n->l);
+			b = n;
+		}
+		update(a);
+		update(b);
+	}
+
+	//Поиск элемента в дереве
+	bool find(ll key) {
+		Node* greater, * equal, * less;
+		split(root, key, less, greater);
+		split(greater, key + 1, equal, greater);
+		bool result = equal;
+		root = merge(merge(less, equal), greater);
+		return result;
+	}
+
+	//Добавление элемента в дерево
+	void insert(ll key) {
+		Node* greater, * less;
+		split(root, key, less, greater);
+		less = merge(less, new Node(key));
+		root = merge(less, greater);
+	}
+
+	//Удаление элемента из дерева
+	void erase(ll key) {
+		Node* greater, * less, * equal;
+		split(root, key, less, greater);
+		split(greater, key + 1, equal, greater);
+		root = merge(less, greater);
+	}
+
+	ll lower(ll key) {
+		Node* greater, * less;
+		split(root, key, less, greater);
+		ll res = less? less->size : 0;
+		root = merge(less, greater);
+		return res;
+	}
+
+	ll upper(ll key) {
+		Node* greater, * less;
+		split(root, key + 1, less, greater);
+		ll res = greater ? greater->size : 0;
+		root = merge(less, greater);
+		return res;
+	}
+};
+minstd_rand Treap::generator;

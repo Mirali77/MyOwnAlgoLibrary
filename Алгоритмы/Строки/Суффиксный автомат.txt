@@ -1,0 +1,34 @@
+vector<map<char, int>> states(1);
+	vector<int> link(1, -1), len(1), cnt(1);
+	int last = 0;
+	auto create = [&]() {
+		states.push_back(map<char, int>());
+		link.push_back(-1);
+		len.push_back(0);
+		cnt.push_back(0);
+	};
+	auto add = [&](int x) {
+		create();
+		len.back() = len[last] + 1;
+		if (good[x]) cnt[sz(states) - 1]++; 
+		int pos;
+		for (pos = last; pos >= 0 && !states[pos].count(s[x]); pos = link[pos]) {
+			states[pos][s[x]] = sz(states) - 1;
+		}
+		last = sz(len) - 1;
+		if (pos >= 0) {
+			int t = states[pos][s[x]];
+			if (len[t] > len[pos] + 1) {
+				create();
+				states.back() = states[t];
+				link.back() = link[t];
+				len.back() = len[pos] + 1;
+				link[sz(len) - 2] = link[t] = sz(len) - 1;
+				for (pos; pos >= 0 && states[pos].count(s[x]) && states[pos][s[x]] == t; pos = link[pos]) {
+					states[pos][s[x]] = sz(len) - 1;
+				}
+			}
+			else link.back() = t;
+		}
+		else link.back() = 0;
+	};

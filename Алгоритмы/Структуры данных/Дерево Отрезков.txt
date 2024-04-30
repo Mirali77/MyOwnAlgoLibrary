@@ -1,0 +1,120 @@
+template <typename T>
+struct seg_tree {
+	vector<T> t;
+	int n = 1;
+	seg_tree(int sn) {
+		while (n < sn) n <<= 1;
+		t.resize(2 * n);
+	}
+	void set(int i, T v, int x, int lx, int rx) {
+		if (rx - lx == 1) {
+			t[x] = v;
+			return;
+		}
+		int m = (lx + rx) >> 1;
+		if (i < m) set(i, v, 2 * x, lx, m);
+		else set(i, v, 2 * x + 1, m, rx);
+		t[x] = t[2 * x] + t[2 * x + 1];
+	}
+	void set(int i, T v) { set(i, v, 1, 0, n); }
+	T query(int l, int r, int x, int lx, int rx) {
+		if (l >= rx || r <= lx) return 0;
+		if (lx >= l && rx <= r) return t[x];
+		int m = (lx + rx) >> 1;
+		return query(l, r, 2 * x, lx, m) + query(l, r, 2 * x + 1, m, rx);
+	}
+	T query(int l, int r) { return query(l, r, 1, 0, n); }
+};
+
+------------------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct lazy_tree {
+	vector<T> t, add;
+	int n = 1;
+	lazy_tree(int sn) {
+		while (n < sn) n <<= 1;
+		t.resize(2 * n, -inf), add.resize(2 * n);
+	}
+	void push(int v, int l, int r) {
+		if (add[v] == 0) return;
+		t[v] += add[v];
+		if (r - l > 1) add[2 * v] += add[v], add[2 * v + 1] += add[v];
+		add[v] = 0;
+	}
+	void set(int i, T v, int x, int lx, int rx) {
+		push(x, lx, rx);
+		if (rx - lx == 1) {
+			t[x] = v;
+			return;
+		}
+		int m = (lx + rx) >> 1;
+		if (i < m) {
+			push(2 * x + 1, m, rx);
+			set(i, v, 2 * x, lx, m);
+		}
+		else {
+			push(2 * x, lx, m);
+			set(i, v, 2 * x + 1, m, rx);
+		}
+		t[x] = min(t[2 * x], t[2 * x + 1]);
+	}
+	void set(int i, T v) { set(i, v, 1, 0, n); }
+	void seg_set(int x, int l, int r, int ql, int qr, T v) {
+		push(x, l, r);
+		if (r <= ql || qr <= l) return;
+		if (ql <= l && r <= qr) add[x] += v, push(x, l, r);
+		else {
+			int m = (l + r) >> 1;
+			seg_set(2 * x, l, m, ql, qr, v);
+			seg_set(2 * x + 1, m, r, ql, qr, v);
+			t[x] = min(t[2 * x], t[2 * x + 1]);
+		}
+	}
+	void seg_set(int ql, int qr, T x) { seg_set(1, 0, n, ql, qr, x); }
+	T query(int l, int r, int x, int lx, int rx) {
+		push(x, lx, rx);
+		if (l >= rx || r <= lx) return inf;
+		if (lx >= l && rx <= r) return t[x];
+		int m = (lx + rx) >> 1;
+		return min(query(l, r, 2 * x, lx, m), query(l, r, 2 * x + 1, m, rx));
+	}
+	T query(int l, int r) { return query(l, r, 1, 0, n); }
+};
+
+-------------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct prog_tree {
+	vector<T> t, add, prog;
+	int n = 1;
+	prog_tree(int sn) {
+		while (n < sn) n <<= 1;
+		t.resize(2 * n), add.resize(2 * n), prog.resize(2 * n);
+	}
+	void push(int v, int l, int r) {
+		if (add[v] == 0 && prog[v] == 0) return;
+		t[v] += add[v] * (r - l) + prog[v] * (r - l) * (r - l + 1) / 2;
+		int m = (l + r) >> 1;
+		if (r - l > 1) add[2 * v] += add[v], add[2 * v + 1] += add[v] + prog[v] * (m - l), prog[2 * v] += prog[v], prog[2 * v + 1] += prog[v];
+		add[v] = prog[v] = 0;
+	}
+	void seg_set(int x, int l, int r, int ql, int qr, T a, T d) {
+		push(x, l, r);
+		if (r <= ql || qr <= l) return;
+		if (ql <= l && r <= qr) add[x] += a + d * (l - ql), prog[x] += d, push(x, l, r);
+		else {
+			int m = (l + r) >> 1;
+			seg_set(2 * x, l, m, ql, qr, a, d);
+			seg_set(2 * x + 1, m, r, ql, qr, a, d);
+			t[x] = t[2 * x] + t[2 * x + 1];
+		}
+	}
+	void seg_set(int ql, int qr, T a, T d) { seg_set(1, 0, n, ql, qr, a, d); }
+	T query(int l, int r, int x, int lx, int rx) {
+		push(x, lx, rx);
+		if (l >= rx || r <= lx) return 0;
+		if (lx >= l && rx <= r) return t[x];
+		int m = (lx + rx) >> 1;
+		return query(l, r, 2 * x, lx, m) + query(l, r, 2 * x + 1, m, rx);
+	}
+	T query(int l, int r) { return query(l, r, 1, 0, n); }
+};

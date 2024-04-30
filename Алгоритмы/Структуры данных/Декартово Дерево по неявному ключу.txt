@@ -1,0 +1,159 @@
+struct Treap {
+	static minstd_rand generator;
+ 
+	struct Node {
+		ll priority, size, value, add = 0, sum, upd = -inf;
+		Node* l = nullptr, * r = nullptr;
+		Node(ll value) : value(value), priority(generator()), size(1), sum(value) {}
+	} *root = nullptr;
+	ll get_size(Node* n) {
+		return n ? n->size : 0;
+	}
+	void push(Node* n) {
+		if (n) {
+			if (n->upd != -inf) {
+				n->value = n->upd + n->add;
+				n->value += n->add;
+				n->sum = (n->upd + n->add) * get_size(n);
+				if (n->l) {
+					n->l->upd = n->upd;
+					n->l->add = n->add;
+				}
+				if (n->r) {
+					n->r->upd = n->upd;
+					n->r->add = n->add;
+				}
+				n->upd = -inf;
+				n->add = 0;
+			}
+			else if (n->add) {
+				n->value += n->add;
+				n->sum += n->add * get_size(n);
+				if (n->l) {
+					n->l->add += n->add;
+				}
+				if (n->r) {
+					n->r->add += n->add;
+				}
+				n->add = 0;
+			}
+		}
+	}
+	void update(Node*& n) {
+		if (n) {
+			push(n);
+			n->size = get_size(n->l) + get_size(n->r) + 1;
+			n->sum = get_sum(n->l) + get_sum(n->r) + n->value;
+		}
+	}
+	ll get_sum(Node* n) {
+		if (n) {
+			update(n);
+			return n->sum;
+		}
+		return 0;
+	}
+	Node* merge(Node* a, Node* b) {
+		if (!a) {
+			return b;
+		}
+		if (!b) {
+			return a;
+		}
+		update(a);
+		update(b);
+		if (a->priority < b->priority) {
+			a->r = merge(a->r, b);
+			update(a);
+			return a;
+		}
+		else {
+			b->l = merge(a, b->l);
+			update(b);
+			return b;
+		}
+	}
+	void split(Node* n, ll k, Node*& a, Node*& b) {
+		update(n);
+		if (n == nullptr) {
+			a = b = nullptr;
+			return;
+		}
+		if (get_size(n->l) < k) {
+			split(n->r, k - get_size(n->l) - 1, n->r, b);
+			a = n;
+		}
+		else {
+			split(n->l, k, a, n->l);
+			b = n;
+		}
+		update(a);
+		update(b);
+	}
+	ll get(ll index) {
+		Node* greater, * equal, * less;
+		ll result;
+		split(root, index, less, greater);
+		split(greater, 1, equal, greater);
+		result = equal ? equal->value : -1;
+		root = merge(merge(less, equal), greater);
+		return result;
+	}
+	void push_back(ll value) {
+		root = merge(root, new Node(value));
+	}
+	void push_front(ll value) {
+		root = merge(new Node(value), root);
+	}
+	void insert(ll value, ll index) {
+		Node* greater, * less;
+		split(root, index, less, greater);
+		root = merge(merge(less, new Node(value)), greater);
+	}
+	void erase(ll index) {
+		Node* greater, * equal, * less;
+		split(root, index, less, greater);
+		split(greater, 1, equal, greater);
+		root = merge(less, greater);
+	}
+	void erase(ll l, ll r) {
+		Node* greater, * equal, * less;
+		split(root, l, less, greater);
+		split(greater, r - l + 1, equal, greater);
+		root = merge(less, greater);
+	}
+	void range_add(ll l, ll r, ll value) {
+		Node* greater, * equal, * less;
+		split(root, l, less, greater);
+		split(greater, r - l + 1, equal, greater);
+		equal->add += value;
+		push(equal);
+		root = merge(merge(less, equal), greater);
+	}
+	void range_update(ll l, ll r, ll value) {
+		Node* greater, * equal, * less;
+		split(root, l, less, greater);
+		split(greater, r - l + 1, equal, greater);
+		equal->add = 0;
+		equal->upd = value;
+		push(equal);
+		root = merge(merge(less, equal), greater);
+	}
+	void cycle_shift(ll l, ll r, ll q) {
+		q %= (r - l + 1);
+		Node* greater, * equal, * less, * last;
+		split(root, l, less, greater);
+		split(greater, r - l + 1, equal, greater);
+		split(equal, r - l + 1 - q, equal, last);
+		root = merge(merge(less, merge(last, equal)), greater);
+	}
+	ll sum_query(ll l, ll r) {
+		Node* greater, * equal, * less;
+		split(root, l, less, greater);
+		split(greater, r - l + 1, equal, greater);
+		ll res = get_sum(equal);
+		root = merge(merge(less, equal), greater);
+		return res;
+	}
+};
+minstd_rand Treap::generator;

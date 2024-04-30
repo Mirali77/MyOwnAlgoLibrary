@@ -1,0 +1,133 @@
+struct Node {
+	ll val;
+	Node* left, * right;
+	Node() {}
+	Node(Node* l, Node* r, ll v) {
+		left = l, right = r, val = v;
+	}
+	Node* build(ll lx, ll rx) {
+		if (rx - lx == 1) {
+			return new Node(nullptr, nullptr, 0);
+		}
+		ll m = (lx + rx) >> 1;
+		Node* left = build(lx, m), * right = build(m, rx);
+		return new Node(left, right, left->val + right->val);
+	}
+	Node* upd(ll i, ll v, ll lx, ll rx) {
+		if (rx - lx == 1) {
+			return new Node(nullptr, nullptr, val + v);
+		}
+		ll m = (lx + rx) >> 1;
+		if (i < m) {
+			Node* nl = left->upd(i, v, lx, m);
+			return new Node(nl, right, nl->val + right->val);
+		}
+		else {
+			Node* nr = right->upd(i, v, m, rx);
+			return new Node(left, nr, left->val + nr->val);
+		}
+	}
+	ll query(ll l, ll r, ll lx, ll rx) {
+		if (lx >= r || rx <= l) {
+			return 0;
+		}
+		if (lx >= l && rx <= r) {
+			return val;
+		}
+		ll m = (lx + rx) >> 1;
+		return left->query(l, r, lx, m) + right->query(l, r, m, rx);
+	}
+};
+ll to_pw(ll n) {
+	ll res = 1;
+	while (res < n) {
+		res *= 2;
+	}
+	return res;
+}
+
+-----------------------------------------------------------------------------------------------
+
+struct Node {
+	ll val;
+	bool add;
+	Node* left, * right;
+	Node() {}
+	Node(Node* l, Node* r, ll v, bool addx = false) {
+		left = l, right = r, val = v; add = addx;
+	}
+	void push(ll lx, ll rx) {
+		val = rx - lx - val;
+		add = 0;
+		if (rx - lx == 1) {
+			return;
+		}
+		Node* l = new Node(*left);
+		l->add ^= 1;
+		Node* r = new Node(*right);
+		r->add ^= 1;
+		left = l;
+		right = r;
+	}
+	Node* build(ll lx, ll rx) {
+		if (rx - lx == 1) {
+			return new Node(nullptr, nullptr, 0);
+		}
+		ll m = (lx + rx) >> 1;
+		Node* left = build(lx, m), * right = build(m, rx);
+		return new Node(left, right, left->val + right->val);
+	}
+	Node* upd(ll i, ll v, ll lx, ll rx) {
+		if (add) {
+			push(lx, rx);
+		}
+		if (rx - lx == 1) {
+			return new Node(nullptr, nullptr, v);
+		}
+		ll m = (lx + rx) >> 1;
+		if (i < m) {
+			Node* nl = left->upd(i, v, lx, m);
+			return new Node(nl, right, nl->val + right->val);
+		}
+		else {
+			Node* nr = right->upd(i, v, m, rx);
+			return new Node(left, nr, left->val + nr->val);
+		}
+	}
+	Node* range_upd(ll l, ll r, ll lx, ll rx) {
+		if (add) {
+			push(lx, rx);
+		}
+		if (rx <= l || lx >= r) {
+			return this;
+		}
+		if (lx >= l && rx <= r) {
+			Node* res = new Node(left, right, val, true);
+			res->push(lx, rx);
+			return res;
+		}
+		ll m = (lx + rx) >> 1;
+		Node* nl = left->range_upd(l, r, lx, m), * nr = right->range_upd(l, r, m, rx);
+		return new Node(nl, nr, nl->val + nr->val);
+	}
+	ll query(ll lx, ll rx, ll l, ll r) {
+		if (add) {
+			push(lx, rx);
+		}
+		if (lx >= r || rx <= l) {
+			return 0;
+		}
+		if (lx >= l && rx <= r) {
+			return val;
+		}
+		ll m = (lx + rx) >> 1;
+		return left->query(lx, m, l, r) + right->query(m, rx, l, r);
+	}
+};
+ll to_pw(ll n) {
+	ll res = 1;
+	while (res < n) {
+		res *= 2;
+	}
+	return res;
+}

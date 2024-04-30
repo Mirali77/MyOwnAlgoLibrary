@@ -1,0 +1,18 @@
+struct DSU {
+	vector<int> count, pred;
+	DSU(int n) {
+		count.resize(n, 1);
+		pred.resize(n);
+		iota(pred.begin(), pred.end(), 0);
+	}
+	int get(int p) {
+		if (pred[p] != p) pred[p] = get(pred[p]);
+		return pred[p];
+	}
+	bool check(int a, int b) { return get(a) == get(b); }
+	void merge(int a, int b) {
+		a = get(a), b = get(b);
+		if (count[a] > count[b]) swap(a, b);
+		pred[a] = b, count[b] += count[a];
+	}
+};
