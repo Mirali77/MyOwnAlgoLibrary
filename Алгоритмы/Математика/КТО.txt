@@ -43,7 +43,7 @@ public:
         apforn(md, reminder, reminderForMd) {
             auto Mv = M / md;
             auto Mvi = Bpow(Mv % md, phiForMd[md] - 1, md);
-            (ans += reminder * Mv % M * Bpow(Mv % md, phiForMd[md] - 1, md) % M) %= M;
+            (ans += reminder * Mv % M * Mvi % M) %= M;
         }
         return ans;
     }
