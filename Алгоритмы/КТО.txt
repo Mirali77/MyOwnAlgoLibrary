@@ -1,0 +1,102 @@
+struct CRT {
+// O(n * sqrt(N)) - where n - number of conditions, N - maximum module among conditions
+public:
+    CRT(): sysIsValid(true) {}
+    void AddCondition(ll c, ll r, ll m) {
+        // c * x = r (mod m)
+        auto factoredM = Factor(m);
+        apforn(prime, pw, factoredM) {
+            auto pwPrime = Bpow(prime, pw, m + 1 /*Module doesn't matter here*/);
+            auto factoredR = r % pwPrime;
+            auto factoredC = c % pwPrime;
+            {
+                auto g = gcd(factoredC, pwPrime);
+                if (factoredR % g != 0) {
+                    sysIsValid = false;
+                    return;
+                }
+                else if (factoredC == 0) continue;
+                factoredR /= g;
+                factoredC /= g;
+                pwPrime /= g;
+            }
+            auto pwPrimePhi = (pwPrime - pwPrime / prime);
+            (factoredR *= Bpow(factoredC, pwPrimePhi - 1, pwPrime)) %= pwPrime; // Multiplying equality by c^(-1)
+            {
+                auto it = reminderForMd.find(pwPrime);
+                if (it != reminderForMd.end()) {
+                    sysIsValid &= (it->snd == factoredR);
+                    continue;
+                }
+                reminderForMd[pwPrime] = factoredR;
+                phiForMd[pwPrime] = pwPrimePhi;
+                basePrimes[prime].push_back(pwPrime);
+            }
+        }
+    }
+    ll operator()() { // Calc result
+        Filter();
+        if (!sysIsValid) return -1;
+        ll M = 1;
+        apforn(md, _, reminderForMd) M *= md;
+        ll ans = 0;
+        apforn(md, reminder, reminderForMd) {
+            auto Mv = M / md;
+            auto Mvi = Bpow(Mv % md, phiForMd[md] - 1, md);
+            (ans += reminder * Mv % M * Bpow(Mv % md, phiForMd[md] - 1, md) % M) %= M;
+        }
+        return ans;
+    }
+private:
+    // x = reminder (mod md)
+    map<ll, ll> reminderForMd; // [md, reminder]
+private: // Utils
+    bool sysIsValid;
+    map<ll, vector<ll>> basePrimes; // [basePrime, {mds with this prime}]
+    map<ll, ll> phiForMd; // [md, his Phi]
+private:
+    void Filter() {
+        vector<ll> mdsToFilter;
+        apforn(_, mds, basePrimes) {
+            sort(mds.rbegin(), mds.rend());
+            ll cur = -1;
+            aforn(md, mds) {
+                ll reminder = reminderForMd[md];
+                if (cur == -1) cur = reminder;
+                else if (cur % md != reminder) {
+                    sysIsValid = false;
+                    return;
+                }
+            }
+            dforn(i, 1, sz(mds) - 1) reminderForMd.erase(mds[i]);
+        }
+    }
+    static vector<int>* GetAllPrimes() { // GetAllPrimes is singletoned, so no TL in 1e5 testscases
+        static vector<int>* allPrimes;
+        if (!allPrimes) {
+            allPrimes = new vector<int>();
+            const int LIM = 5e4;
+            vector<bool> eratos(LIM + 1);
+            dforn(i, 2, LIM) {
+                if (!eratos[i]) allPrimes->push_back(i);
+                sforn(j, i, LIM, i) eratos[j] = true;
+            }
+        }
+        return allPrimes;
+    }
+    vector<pii> Factor(ll x) {
+        vector<pii> res;
+        aforn(g, *GetAllPrimes()) if (x % g == 0) {
+            res.push_back({g, 0});
+            while (x % g == 0) {
+                res.back().snd++;
+                x /= g;
+            }
+        }
+        if (x > 1) res.push_back({x, 1});
+        return res;
+    }
+    ll Bpow(ll x, ll n, ll md) {
+        return n == 0 ? 1LL : n & 1 ? Bpow(x, n - 1, md) * x % md : Bpow(x * x % md, n >> 1, md);
+    }
+};
