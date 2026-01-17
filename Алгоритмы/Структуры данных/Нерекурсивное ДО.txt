@@ -3,12 +3,8 @@ struct seg_tree {
 	seg_tree(
         int _n,
         const T& _default_val = 0,
-        function<T(const T&, const T&)> _merge_func = [](const T& a, const T& b) {
-            return a + b;
-        },
-        function<void(T&, const T&)> _set_func = [](T& tx, const T& v) {
-            tx = v;
-        }
+        function<T(const T&, const T&)> _merge_func = [](const T& a, const T& b) { return a + b; },
+        function<void(T&, const T&)> _set_func = [](T& tx, const T& v) { tx = v; }
     )
         : default_val(_default_val)
         , merge_func(_merge_func)
@@ -145,3 +141,4 @@ struct seg_tree {
     }
 
 };
+
