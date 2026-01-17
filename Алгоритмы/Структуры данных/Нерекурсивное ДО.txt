@@ -1,5 +1,50 @@
 template <typename T>
 struct seg_tree {
+	seg_tree(
+        int _n,
+        const T& _default_val = 0,
+        function<T(const T&, const T&)> _merge_func = [](const T& a, const T& b) {
+            return a + b;
+        },
+        function<void(T&, const T&)> _set_func = [](T& tx, const T& v) {
+            tx = v;
+        }
+    )
+        : default_val(_default_val)
+        , merge_func(_merge_func)
+        , set_func(_set_func)
+    {
+		while (n < _n) n <<= 1;
+		t.resize(2 * n, default_val);
+	}
+	void build(const vector<T>& a) {
+		dforn(i, 0, a.size() - 1) t[i + n] = a[i];
+		rforn(i, n - 1) t[i] = merge_func(t[2 * i], t[2 * i + 1]);
+	}
+	void set(int i, T v) {
+        set_func(t[i += n], v);
+		for (i >>= 1; i >= 1; i >>= 1) t[i] = merge_func(t[2 * i], t[2 * i + 1]);
+	}
+	T query(int l, int r) {
+		T res = default_val;
+		for (l += n, r += n; l <= r; l >>= 1, r >>= 1) {
+			if (l & 1) res = merge_func(res, t[l++]);
+			if (!(r & 1)) res = merge_func(res, t[r--]);
+		}
+		return res;
+	}
+
+	int n = 1;
+    T default_val;
+	vector<T> t;
+    function<T(const T&, const T&)> merge_func;
+    function<void(T&, const T&)> set_func;
+};
+
+-------------------------------------------------------------------------------------
+
+template <typename T>
+struct seg_tree {
 	int n = 1;
 	vector<T> t;
 	seg_tree(int sn) {
@@ -98,4 +143,5 @@ struct seg_tree {
         }
         return res;
     }
+
 };
